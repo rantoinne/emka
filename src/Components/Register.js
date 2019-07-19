@@ -7,6 +7,7 @@ import Entypo from 'react-native-vector-icons/Entypo';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import apiUrl from '../Constants/Api';
 import showToast from '../Constants/ShowToast';
+import AsyncStorage from '@react-native-community/async-storage';
 
 const sha256 = require('js-sha256');
 
@@ -26,7 +27,6 @@ class Register extends React.Component {
     }
 
     registerNewUser() {
-
         var request = {};
         request['firstName'] = this.state.firstName;
         request['lastName'] = this.state.lastName;
@@ -44,12 +44,31 @@ class Register extends React.Component {
         })
         .then((res)=> res.json())
         .then((response)=> {
+            if(response.message === "Registration Completed Sucessfully...") {
+                console.log('res',response)
+                this.props.navigation.navigate('LoginScreen');
+            }
+            else {
+                console.log('res',response)
+                showToast(response.error)
+            }
             
         })
         .catch((error)=> {
+            console.log('res',error)
             showToast('Network Request Failed due to server error')
         })
     }
+
+    // async componentDidMount() {
+    //     try {
+    //         var value = await AsyncStorage.getItem('@userToken');
+    //         alert(value);
+    //     }
+    //     catch(error) {
+    //         alert('Something went wrong');
+    //     }
+    // }
 
     render() {
         return (

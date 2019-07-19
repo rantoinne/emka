@@ -4,6 +4,8 @@ import {
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import Entypo from 'react-native-vector-icons/Entypo';
+import AsyncStorage from '@react-native-community/async-storage';
+import showToast from '../Constants/ShowToast';
 
 const { width, height } = Dimensions.get('window');
 
@@ -12,10 +14,56 @@ class LoginScreen extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            secureField: true
+            secureField: true,
+            email: '',
+            password: ''
         };
     }
 
+    loginUser() {
+        var request = {};
+        request['Email'] = this.state.email;
+        request['Password'] = this.state.password;
+
+        console.log(request)
+        fetch(`${apiUrl}/user/login`, {
+            method: 'POST',
+            headers: {
+                'Access-Control-Allow-Credentials': true,
+                'Content-type': 'application/json'
+            },
+            body: JSON.stringify(request)
+        })
+        .then((res)=> res.json())
+        .then((response)=> {
+            if(response.message === "Logged In Successfully") {
+                console.log('res',response.userData)
+                this.storeTokenAndEmailLocally(response.userData);
+                // this.props.navigation.navigate('LoginScreen');
+            }
+            else {
+                console.log('res',response)
+                showToast(response.error)
+            }
+            
+        })
+        .catch((error)=> {
+            console.log('res',error)
+            showToast('Network Request Failed due to server error')
+        })
+    }
+
+    storeTokenAndEmailLocally = async (data) => {
+        alert(JSON.stringify(data))
+        try {
+            await AsyncStorage.setItem('@userToken', data.token);
+            await AsyncStorage.setItem('@userEmail', data.userEmail);
+        }
+        catch(error) {
+            alert('Something went wrong');
+        }
+    }
+    
     render() {
         return (
             <View style={{ flex: 1, justifyContent: 'flex-start', alignItems: 'center' }}>
@@ -37,7 +85,7 @@ class LoginScreen extends React.Component {
                         <TextInput
                             style={{ width: '100%', borderWidth: 0, padding: 4, fontFamily: 'Montserrat-Regular' }}
                             keyboardType='email-address'
-                            onChangeText={text => this.lastName = text}
+                            onChangeText={(text)=> this.setState({ email: text })}
                             placeholder="User Email" />
                     </View>
 
@@ -50,19 +98,19 @@ class LoginScreen extends React.Component {
                         <TextInput
                             style={{ width: '100%', borderWidth: 0, padding: 4, fontFamily: 'Montserrat-Regular' }}
                             secureTextEntry= {this.state.secureField}
-                            onChangeText={text => this.lastName = text}
+                            onChangeText={(text)=> this.setState({ password: text })}
                             placeholder="Password" />
                     </View>
 
                     <View style={{ flexDirection: 'row', justifyContent: 'space-evenly', alignItems: 'center', width: '100%', borderWidth: 0, }}>
 
-                    <TouchableOpacity onPress={()=> this.props.navigation.navigate('Register')}>
+                    <TouchableOpacity onPress={()=> this.loginUser()}>
                         <LinearGradient colors={['#666CDD', '#666CDD']} style= {{width: (width / 2) - 80, marginTop: 20, flexDirection: 'row', padding: 8, paddingVertical: 10, borderRadius: 4, justifyContent: 'center', alignItems: 'center'}}>
-                            <Text style={{ fontSize: 15, fontFamily: 'Montserrat-SemiBold', color: 'white',}}>Sign In</Text>
+                            <Text style={{ fontSize: 15, fontFamily: 'Montserrat-SemiBold', color: 'white',}}>Log In</Text>
                         </LinearGradient>
                     </TouchableOpacity>
 
-                    <TouchableOpacity>
+                    <TouchableOpacity onPress={()=> this.props.navigation.navigate('Register')}>
                         <LinearGradient colors={['#666CDD', '#666CDD']} style= {{width: (width / 2) - 80, marginTop: 20, flexDirection: 'row', padding: 8, paddingVertical: 10, borderRadius: 4, justifyContent: 'center', alignItems: 'center'}}>
                             <Text style={{ fontSize: 15, fontFamily: 'Montserrat-SemiBold', color: 'white', }}>Register</Text>
                         </LinearGradient>
