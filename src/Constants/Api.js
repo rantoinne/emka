@@ -1,0 +1,1 @@
+export default apiUrl = 'http://35.237.171.41:5000';
