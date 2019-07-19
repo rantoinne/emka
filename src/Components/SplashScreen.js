@@ -7,16 +7,30 @@ import {
     Text,
     StatusBar,
 } from 'react-native';
-
+import AsyncStorage from '@react-native-community/async-storage';
 import LinearGradient from 'react-native-linear-gradient';
-
 
 class SplashScreen extends React.Component {
 
-    componentDidMount() {
-        setTimeout(() => {
-            this.props.navigation.navigate('WalletDashScreen')
-        }, 2000);
+    async componentDidMount() {
+        try {
+            var value = await AsyncStorage.getItem('@userToken')
+            if(value !== null) {
+                setTimeout(() => {
+                    this.props.navigation.navigate('WalletDashScreen');
+                }, 1500);
+            }
+            else {
+                setTimeout(() => {
+                    this.props.navigation.navigate('LoginScreen')
+                }, 1500);
+            }
+        }
+        catch(error) {
+            setTimeout(() => {
+                this.props.navigation.navigate('LoginScreen')
+            }, 2000);
+        }
     }
 
     render() {

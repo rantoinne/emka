@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-    View, Text, Dimensions, TouchableOpacity, StatusBar, Image, TextInput
+    View, Text, Dimensions, TouchableOpacity, StatusBar, Image, TextInput, BackHandler
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import Entypo from 'react-native-vector-icons/Entypo';
@@ -18,6 +18,19 @@ class LoginScreen extends React.Component {
             email: '',
             password: ''
         };
+    }
+
+    componentDidMount() {
+        // AsyncStorage.clear();
+        BackHandler.addEventListener('hardwareBackPress', () => {
+            return true;
+        });
+    }
+
+    componentWillUnmount() {
+        BackHandler.removeEventListener('hardwareBackPress', () => {
+            return true;
+        });
     }
 
     loginUser() {
@@ -54,10 +67,10 @@ class LoginScreen extends React.Component {
     }
 
     storeTokenAndEmailLocally = async (data) => {
-        alert(JSON.stringify(data))
         try {
             await AsyncStorage.setItem('@userToken', data.token);
             await AsyncStorage.setItem('@userEmail', data.userEmail);
+            this.props.navigation.navigate('WalletDashScreen')
         }
         catch(error) {
             alert('Something went wrong');

@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-    View, Text, Dimensions, TouchableOpacity, StatusBar, Image, TextInput
+    View, Text, Dimensions, TouchableOpacity, StatusBar, Image, TextInput, BackHandler
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import Entypo from 'react-native-vector-icons/Entypo';
@@ -60,15 +60,17 @@ class Register extends React.Component {
         })
     }
 
-    // async componentDidMount() {
-    //     try {
-    //         var value = await AsyncStorage.getItem('@userToken');
-    //         alert(value);
-    //     }
-    //     catch(error) {
-    //         alert('Something went wrong');
-    //     }
-    // }
+    componentDidMount() {
+        BackHandler.addEventListener('hardwareBackPress', () => {
+            this.props.navigation.goBack();
+        });
+    }
+
+    componentWillUnmount() {
+        BackHandler.removeEventListener('hardwareBackPress', () => {
+            return true;
+        });
+    }
 
     render() {
         return (

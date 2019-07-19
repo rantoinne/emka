@@ -9,14 +9,14 @@ import { createStackNavigator, createAppContainer, } from 'react-navigation';
 
 
 const AppContainer = createStackNavigator({
-  Register: {
-    screen: Register,
+  SplashScreen: {
+    screen: SplashScreen,
     navigationOptions: ({ navigation }) => ({
       header: null
     })
   },
-  SplashScreen: {
-    screen: SplashScreen,
+  Register: {
+    screen: Register,
     navigationOptions: ({ navigation }) => ({
       header: null
     })
