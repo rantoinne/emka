@@ -2,6 +2,7 @@ import React, { Fragment } from 'react';
 import {
     StyleSheet,
     ActivityIndicator,
+    TextInput,
     Text,
     Dimensions,
     View,
@@ -14,7 +15,8 @@ import AntDesign from 'react-native-vector-icons/AntDesign';
 import Entypo from 'react-native-vector-icons/Entypo';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5'
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import { TextInput } from 'react-native-gesture-handler';
+import apiUrl from '../Constants/Api';
+import showToast from '../Constants/ShowToast';
 
 const { width, height } = Dimensions.get('window');
 
@@ -23,8 +25,9 @@ class CreateWallet extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            email: 'ravi@ayanworks.com',
-            start: false
+            start: false,
+            walletName: '',
+            walletPassword: ''
         };
     }
 
@@ -32,6 +35,28 @@ class CreateWallet extends React.Component {
         this.setState({
             start: true
         });
+
+        var request = {};
+        request["walletName"] = this.state.walletName;
+        request["walletPassword"] = this.state.walletPassword;
+        request["Email"] = this.props.navigation.state.params.email;
+        console.log(request)
+        fetch(`${apiUrl}/user/createWallet`, {
+            method: 'POST',
+            headers: {
+                'Access-Control-Allow-Credentials': true,
+                'Content-type': 'application/json',
+                'access-token': (this.props.navigation.state.params.token).toString()
+            },
+            body: JSON.stringify(request)
+        })
+        .then((res)=> res.json())
+        .then((response)=> {
+            console.log("response", response)
+        })
+        .catch((error)=> {
+            console.log("error", error);
+        })
     }
 
     render() {
@@ -54,8 +79,7 @@ class CreateWallet extends React.Component {
                         underlineColorAndroid="#43B0E8"
                         keyboardType='email-address'
                         editable={false}
-                        value={this.state.email}
-                        onChangeText={text => this.lastName = text}
+                        value={this.props.navigation.state.params.email}
                         placeholder="First name"
                     />
                 </View>
@@ -66,9 +90,8 @@ class CreateWallet extends React.Component {
                         style={{ width: '90%', borderWidth: 0, padding: 4, fontFamily: 'Montserrat-Regular' }}
                         underlineColorAndroid="#666CDD"
                         keyboardType='email-address'
-
-                        onChangeText={text => this.lastName = text}
-                        placeholder="First name"
+                        onChangeText={text => this.setState({ walletName: text })}
+                        placeholder="Wallet Name"
                     />
                 </View>
 
@@ -77,10 +100,9 @@ class CreateWallet extends React.Component {
                     <TextInput
                         style={{ width: '90%', borderWidth: 0, padding: 4, fontFamily: 'Montserrat-Regular' }}
                         underlineColorAndroid="#666CDD"
-                        keyboardType='email-address'
-
-                        onChangeText={text => this.lastName = text}
-                        placeholder="Last Name"
+                        secureTextEntry
+                        onChangeText={text => this.setState({ walletPassword: text })}
+                        placeholder="Wallet Password"
                     />
                 </View>
 

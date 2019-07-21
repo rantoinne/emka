@@ -3,7 +3,9 @@ import {
     StyleSheet,
     ActivityIndicator,
     Text,
+    Alert,
     Dimensions,
+    BackHandler,
     View,
     TouchableOpacity
 } from 'react-native';
@@ -12,6 +14,10 @@ import LinearGradient from 'react-native-linear-gradient';
 import SimpleLineIcons from 'react-native-vector-icons/SimpleLineIcons';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import Entypo from 'react-native-vector-icons/Entypo';
+import Biometrics from 'react-native-biometrics'
+import apiUrl from '../Constants/Api';
+import showToast from '../Constants/ShowToast';
+import AsyncStorage from '@react-native-community/async-storage'
 
 const { width, height } = Dimensions.get('window');
 
@@ -20,14 +26,115 @@ class WalletDashScreen extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            email: 'ravi@ayanworks.com',
-            walletCreated: false,
-            walletDID: 'ds56s5dcasac8r7Zzc878c4'
+            email: '',
+            walletCreated: true,
+            walletDID: 'ds56s5dcasac8r7Zzc878c4',
+            showLoader: true,
+            token: ''
         };
     }
 
-    render() {
+    componentWillUnmount() {
+        BackHandler.removeEventListener('hardwareBackPress', () => {
+            return true;
+        });
+    }
 
+    componentDidMount = async () => {
+        BackHandler.addEventListener('hardwareBackPress', () => {
+            return true;
+        });
+        try {
+            var value = await AsyncStorage.getItem('@userEmail')
+            var token = await AsyncStorage.getItem('@userToken')
+            if(value !== null && token !== null) {
+                this.setState({
+                    email: value,
+                    token
+                });
+                this.postMountUserCredentialCheck();
+            }
+        }
+        catch(error) {
+            showToast('Error fetching your profile. Try logging in again.');
+        }
+    }
+
+    postMountUserCredentialCheck() {
+        
+        Biometrics.isSensorAvailable()
+            .then((biometryType) => {
+                Biometrics.createKeys('Confirm fingerprint')
+                    .then((publicKey) => {
+                        var request = {};
+                        request["Email"] = this.state.email;
+                        request["fingerPrint"] = publicKey;
+                        fetch(`${apiUrl}/user/addfingerprint/`, {
+                            method: 'POST',
+                            headers: {
+                                'Access-Control-Allow-Credentials': true,
+                                'Content-type': 'application/json'
+                            },
+                            body: JSON.stringify(request)
+                        })
+                        .then((res)=> res.json())
+                        .then((response)=> {
+                            this.fetchUserProfile();                            
+                        })
+                        .catch((error)=> {
+                            this.setState({
+                                showLoader: false,
+                            });
+                            console.log('res',error)
+                            showToast('Network Request Failed due to server error')
+                        })
+                    })
+            })
+            this.setState({
+                showLoader: false,
+            });
+    }
+
+    fetchUserProfile() {
+        fetch(`${apiUrl}/user/details/`, {
+            method: 'POST',
+            headers: {
+                'Access-Control-Allow-Credentials': true,
+                'Content-type': 'application/json',
+                'access-token': this.state.token,
+            },
+            body: JSON.stringify({ Email: this.state.email })
+        })
+        .then((res)=> res.json())
+        .then((response)=> {
+            console.log(response.data.WalletStatusType)
+            this.setState({
+                walletStatusType: response.data.WalletStatusType
+            })
+        })
+        .catch((error)=> {
+            console.log('res',error)
+            showToast('Network Request Failed due to server error')
+        })
+    }
+
+    logOut() {
+        Alert.alert(
+            'Logout',
+            'Do you want to log out',
+            [
+              {text: 'Yes', onPress: () => this.props.navigation.navigate('LoginScreen')},
+              {
+                text: 'No',
+                onPress: () => console.log('Cancel Pressed'),
+                style: 'cancel',
+              },
+            ],
+            {cancelable: false},
+        );
+    }
+
+    render() {
         if (this.state.walletCreated) {
             return (
                 <View style={{ flex: 1, justifyContent: 'flex-start', alignItems: 'center' }}>
@@ -51,11 +158,11 @@ class WalletDashScreen extends React.Component {
                             hasn't been created yet.
                     </Text>
 
-                        <TouchableOpacity onPress= {() => this.props.navigation.navigate('CreateWallet')}>
-                            <LinearGradient colors={['#666CDD', '#666CDD']} style={{ width: width - 180, marginTop: 20, flexDirection: 'row', padding: 8, paddingVertical: 12, justifyContent: 'center', alignItems: 'center' }}>
+                        <TouchableOpacity onPress= {() => this.props.navigation.navigate('CreateWallet', { email: this.state.email, token: this.state.token })}>
+                            <View style={{ backgroundColor: '#666CDD', width: width - 180, marginTop: 20, flexDirection: 'row', padding: 8, paddingVertical: 12, justifyContent: 'center', alignItems: 'center' }}>
                                 <Entypo name="wallet" color="white" size={24} />
                                 <Text style={{ fontSize: 15, fontFamily: 'Montserrat-SemiBold', color: 'white', marginLeft: 10 }}>Create Wallet</Text>
-                            </LinearGradient>
+                            </View>
                         </TouchableOpacity>
                     </View>
 
@@ -66,7 +173,7 @@ class WalletDashScreen extends React.Component {
             );
         }
 
-        else {
+        else if(!this.state.walletCreated && !this.state.showLoader) {
             return (
                 <View style={{ flex: 1, justifyContent: 'flex-start', alignItems: 'center' }}>
                     <LinearGradient colors={['#43B0E8', '#666CDD']} start={{ x: 0.05, y: 0 }} end={{ x: 0, y: 1 }}
@@ -99,7 +206,7 @@ class WalletDashScreen extends React.Component {
                             </LinearGradient>
                         </TouchableOpacity>
 
-                        <TouchableOpacity>
+                        <TouchableOpacity onPress={()=> this.props.navigation.navigate('ViewAllRequests')}>
                             <LinearGradient colors={['#666CDD', '#666CDD']} style={{ width: width - 200, borderRadius: 4, marginTop: 20, flexDirection: 'row', padding: 8, paddingVertical: 12, justifyContent: 'center', alignItems: 'center' }}>
                                 <Entypo name="documents" color="white" size={24} />
                                 <Text style={{ fontSize: 15, fontFamily: 'Montserrat-SemiBold', color: 'white', marginLeft: 10 }}>View Access</Text>
@@ -108,10 +215,26 @@ class WalletDashScreen extends React.Component {
                     </View>
 
                     <View style={{ width, height: (height / 14), justifyContent: 'center', alignItems: 'center', flexDirection: 'row', position: 'absolute', bottom: 0, backgroundColor: '#43B0E840' }}>
-                        <AntDesign name="logout" color="#666CDD" size={28} />
+                        <AntDesign 
+                            onPress= {()=> this.logOut()}
+                            name="logout" color="#666CDD" size={28} />
                     </View>
                 </View>
             );
+        }
+
+        else if(this.state.showLoader && !this.state.walletCreated) {
+            return (
+                <View style= {{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+                    <ActivityIndicator size= {40} color="#43B0E8" style={{marginBottom: 30, marginTop: 100}} />
+                    {
+                        this.state.email == '' ? (
+                            <Text style= {{fontSize: 14, color: '#43B0E8', fontFamily: 'Montserrat-SemiBold'}}>Fetching your email</Text> ) : (
+                                <Text style= {{fontSize: 14, color: '#666CDD', fontFamily: 'Montserrat-SemiBold', textAlign: 'center'}}>Fetching Profile for {'\n'} {this.state.email}</Text>
+                            )
+                    }
+                </View>
+            )
         }
     }
 };

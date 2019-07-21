@@ -21,7 +21,7 @@ class LoginScreen extends React.Component {
     }
 
     componentDidMount() {
-        // AsyncStorage.clear();
+        AsyncStorage.clear();
         BackHandler.addEventListener('hardwareBackPress', () => {
             return true;
         });
@@ -98,6 +98,7 @@ class LoginScreen extends React.Component {
                         <TextInput
                             style={{ width: '100%', borderWidth: 0, padding: 4, fontFamily: 'Montserrat-Regular' }}
                             keyboardType='email-address'
+                            autoCapitalize= 'none'
                             onChangeText={(text)=> this.setState({ email: text })}
                             placeholder="User Email" />
                     </View>
@@ -111,6 +112,7 @@ class LoginScreen extends React.Component {
                         <TextInput
                             style={{ width: '100%', borderWidth: 0, padding: 4, fontFamily: 'Montserrat-Regular' }}
                             secureTextEntry= {this.state.secureField}
+                            autoCapitalize= 'none'
                             onChangeText={(text)=> this.setState({ password: text })}
                             placeholder="Password" />
                     </View>
