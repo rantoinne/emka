@@ -27,7 +27,7 @@ class WalletDashScreen extends React.Component {
         super(props);
         this.state = {
             email: '',
-            walletCreated: true,
+            walletCreated: false,
             walletDID: 'ds56s5dcasac8r7Zzc878c4',
             showLoader: true,
             token: ''
@@ -167,7 +167,9 @@ class WalletDashScreen extends React.Component {
                     </View>
 
                     <View style={{ width, height: (height / 14), justifyContent: 'center', alignItems: 'center', flexDirection: 'row', position: 'absolute', bottom: 0, backgroundColor: '#43B0E840' }}>
-                        <AntDesign name="logout" color="#666CDD" size={28} />
+                        <AntDesign
+                            onPress={()=> this.logOut()}
+                            name="logout" color="#666CDD" size={28} />
                     </View>
                 </View>
             );
